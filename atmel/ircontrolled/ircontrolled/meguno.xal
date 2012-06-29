@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<arduino-link-project>
+  <source-path>D:\SVN\opensource\raviaw-arduino\atmel\ircontrolled\ircontrolled\build-cli\ircontrolled.hex</source-path>
+  <port>COM5</port>
+  <device-id />
+  <baud-rate>9600</baud-rate>
+  <log-file-path />
+  <transmit-strings />
+  <serial-monkey />
+</arduino-link-project>

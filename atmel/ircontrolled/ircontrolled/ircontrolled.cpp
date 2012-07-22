@@ -29,6 +29,13 @@
 #define KEY_REV 3860445765
 #define KEY_FWD 3960715845
 
+#define KEY_UP 2139142725
+#define KEY_RIGHT 2991438405
+#define KEY_DOWN 2122431045
+#define KEY_LEFT 2924591685
+
+#define KEY_ENTER 3726752325
+
 #define MAXPULSE 1000
 #define RESOLUTION 20
 #define MAX_PULSES 60
@@ -38,25 +45,55 @@
 #define BLINK_PIN 4
 #define HIGH_POWER_LED 11
 
+#define MOTOR_REVERSE_PIN 12
+#define MOTOR_POWER_PIN 11
+#define MOTOR_STATUS_PIN 10
+
 unsigned int pulses[100][2];  // pair is high and low pulse
 unsigned short currentpulse = 0; // index for pulses we're storing
 
 int currentPower = 0;
 
+// 0, 1, 2, 3, 4
+int currentEnginePower = 0;
+const int maxEnginePower = 10;
+
 void onPulse(void);
 void processCommand(unsigned long command);
 int calculateCurrentPowerIncrement();
 void adjustPower(int increment);
+void engineForward();
+void engineReverse();
+void enginePowerIncrease();
+void enginePowerDecrease();
+void engineStop();
+
+int translateToPower(int currentPower);
+void 	setPower(int power);
 
 void setup()
 {
-	Led7Segment::initializeLedPins();
+	Serial.begin(9600);
+	Serial.println("Ready to go");
+	//Led7Segment::initializeLedPins();
+	pinMode(IRpin, INPUT);
 	pinMode(PLAY_PIN, OUTPUT);
 	pinMode(HIGH_POWER_LED, OUTPUT);
+	pinMode(MOTOR_POWER_PIN, OUTPUT);
+	pinMode(MOTOR_REVERSE_PIN, OUTPUT);
+	pinMode(MOTOR_STATUS_PIN, OUTPUT);
 }
 
 void loop()
 {
+	/*int analogReadValue = analogRead(A0);
+	Serial.print("{A0,T,");
+	Serial.print(analogReadValue);
+	Serial.println("}");
+	if (1 == 1) {
+		return;
+	}*/
+
 	unsigned int highpulse, lowpulse;  // temporary storage timing
 	highpulse = lowpulse = 0; // start out with no pulse length
 	
@@ -103,11 +140,6 @@ void onPulse(void) {
 	unsigned long final = 0;
 	unsigned long n = 1;
 	for (int i = 1; i < currentpulse; i++) {
-		/*Serial.print(pulses[i][0], DEC);
-		Serial.print(" usec, ");
-		Serial.print(pulses[i][1], DEC);
-		Serial.println(" usec");*/
-
 		if (pulses[i][0] > 20 && pulses[i][0] < 50) {
 			n *= 2;
 		}  else if (pulses[i][0] > 60 && pulses[i][0] < 100) {
@@ -131,6 +163,87 @@ void onPulse(void) {
 }
 
 void processCommand(unsigned long command) {
+	if (command == KEY_RIGHT) {
+		engineForward();
+	} else if (command == KEY_LEFT) {
+		engineReverse();
+	} else if (command == KEY_UP) {
+		enginePowerIncrease();
+	} else if (command == KEY_DOWN) {
+		enginePowerDecrease();
+	} else if (command == KEY_ENTER) {
+		engineStop();
+	}
+}	
+
+void engineForward() {
+	int oldPower = currentEnginePower;
+	digitalWrite(MOTOR_REVERSE_PIN, HIGH);
+	setPower(oldPower);
+}
+
+void engineReverse() {
+	int oldPower = currentEnginePower;
+	digitalWrite(MOTOR_REVERSE_PIN, LOW);
+	setPower(oldPower);
+}
+
+void engineStop() {
+	currentEnginePower = 0;
+	setPower(currentEnginePower);
+}
+
+void enginePowerIncrease() {
+	currentEnginePower++;
+	if (currentEnginePower > maxEnginePower) {
+		currentEnginePower = maxEnginePower;
+	}
+	setPower(currentEnginePower);
+}
+
+void enginePowerDecrease()
+{
+	currentEnginePower--;
+	if (currentEnginePower < 0) {
+		currentEnginePower = 0;
+	}
+	setPower(currentEnginePower);
+}	
+
+void setPower(int currentPowerFactor) {
+	int power = translateToPower(currentPowerFactor);
+	//analogWrite(MOTOR_POWER_PIN, power);
+	analogWrite(MOTOR_STATUS_PIN, power);
+}
+
+int translateToPower(int currentPower) {
+	switch(currentPower) {
+		case 0:
+		return 0;
+		case 1:
+		return 78;
+		case 2:
+		return 80;
+		case 3:
+		return 82;
+		case 4:
+		return 85;
+		case 5:
+		return 90;
+		case 6:
+		return 100;
+		case 7:
+		return 110;
+		case 8:
+		return 120;
+		case 9:
+		return 140;
+		case 10:
+		return 160;
+	}
+}
+
+/*void processCommand(unsigned long command) {
 	if (command == PLAY_CODE) {
 		digitalWrite(PLAY_PIN, HIGH);
 	} else if (command == STOP_CODE) {
@@ -163,8 +276,20 @@ void processCommand(unsigned long command) {
 		adjustPower(-1 * calculateCurrentPowerIncrement());
 	} else if (command == KEY_FWD) {
 		adjustPower(calculateCurrentPowerIncrement());
-	}
-}
+	} else if (command == KEY_UP) {
+		Serial.println("KEY_UP");
+		Led7Segment::randomSwitchLeds(400, 5);
+	} else if (command == KEY_RIGHT) {
+		Serial.println("KEY_RIGHT");
+		Led7Segment::randomSwitchLeds(200, 15);
+	} else if (command == KEY_DOWN) {
+		Serial.println("KEY_DOWN");
+		Led7Segment::randomSwitchLeds(100, 30);
+	} else if (command == KEY_LEFT) {
+		Serial.println("KEY_LEFT");
+		Led7Segment::randomSwitchLeds(25, 50);
+	}		
+}*/
 
 int calculateCurrentPowerIncrement() {
 	if (currentPower > 5) {

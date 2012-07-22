@@ -25,6 +25,10 @@ int n8[] = { 1,1,1,1,1,1,1 };
 int n9[] = { 1,1,1,1,0,1,1 };
 int nA[] = { 1,1,1,0,1,1,1 };
 
+int Led7Segment() {
+	srand( analogRead(A5) );
+}
+
 void Led7Segment::initializeLedPins() {
   for (int i = 0; i < ledArraySize; i++) {
 	  pinMode(leds[i], OUTPUT);
@@ -32,15 +36,37 @@ void Led7Segment::initializeLedPins() {
 }
 
 void Led7Segment::showSequence(int waitTimeMs) {
-	for (int i = 0; i < ledArraySize; i++) {
-		digitalWrite(legs[i], LOW);
-	}
+	low();
 	for (int i = 0; i < ledArraySize; i++) {
 		digitalWrite(legs[i], HIGH);
 		delay(waitTimeMs);
 	}
+	low();
+}
+
+void Led7Segment::low() {
 	for (int i = 0; i < ledArraySize; i++) {
 		digitalWrite(legs[i], LOW);
+	}
+}
+
+void Led7Segment::randomBlinkLeds(int cycles, int upTimeMs) {
+}
+
+void Led7Segment::randomSwitchLeds(int cycles, int upTimeMs) {
+	int ledsStatus[ledArraySize];
+	memset(ledsStatus, 0, sizeof(ledsStatus));
+	low();
+	for (int i = 0; i < cycles; i++) {
+		int next = rand() % ledArraySize;
+		if (ledsStatus[next] == 1) {
+			ledsStatus[next] = 0;
+			digitalWrite(leds[next], LOW);
+		} else {
+			ledsStatus[next] = 1;
+			digitalWrite(leds[next], HIGH);
+		}
+		delay(upTimeMs);
 	}
 }
 

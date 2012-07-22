@@ -14,6 +14,9 @@ class Led7Segment {
 		static void initializeLedPins();
 		static void showSequence(int waitTimeMs);
 		static void printNumber(int n);
+		static void randomBlinkLeds(int cycles, int upTimeMs);
+		static void randomSwitchLeds(int cycles, int upTimeMs);
+		static void low();
 	private:
 		static void switchLeds(int values[]);
 };
